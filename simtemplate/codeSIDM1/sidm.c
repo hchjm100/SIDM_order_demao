@@ -8,7 +8,7 @@
 #include "proto.h"
 //#define DYDEBUG
 
-void sidm(double dt_drift){
+void sidm(double dt_drift, double dt_gravkick){
 
     long long ntot,nsumscatt,nsumngb;
     int i, j, ibullet, sendTask, source;
@@ -66,7 +66,7 @@ void sidm(double dt_drift){
 
 	    for(j = 0; j < NTask; j++) Exportflag[j] = 0;
 
-	    doscatt(ibullet,0,dt_drift,TypicalDist);
+	    doscatt(ibullet,0,dt_drift, dt_gravkick, TypicalDist);
 
 	    for(j = 0; j < NTask; j++){
 		if(Exportflag[j])
@@ -150,7 +150,7 @@ void sidm(double dt_drift){
 	    for(j = 0; j < nbuffer[ThisTask]; j++)
 	    {
 		// Do scatterings for external particles  
-		doscatt(j,1,dt_drift,TypicalDist);
+		doscatt(j,1,dt_drift, dt_gravkick, TypicalDist);
 	    }
 
 	    /* do a block to explicitly measure imbalance */

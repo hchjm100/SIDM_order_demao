@@ -48,12 +48,12 @@ void move_particles(int time0, int time1)
       dt_drift = dt_gravkick = dt_hydrokick = (time1 - time0) * All.Timebase_interval;
     }
 
-  // We use the force tree to search for neighborhood and do scattering
-  if(dt_drift>0.0 && !(TreeReconstructFlag)){
-  //if(dt_drift>0.0){ // results similar, but disturbance exists occasionally...
-     // In the beginning of scattering, will clear all nscatt
-     sidm(dt_drift);
-  }
+//  // We use the force tree to search for neighborhood and do scattering
+//  if(dt_drift>0.0 && !(TreeReconstructFlag)){
+//  //if(dt_drift>0.0){ // results similar, but disturbance exists occasionally...
+//     // In the beginning of scattering, will clear all nscatt
+//     sidm(dt_drift);
+//  }
 
   //if(ThisTask==0) printf("\n XXXXXX dt_drift XXXXXXXXXX %g\n",dt_drift);
   for(i = 0; i < NumPart; i++)
@@ -80,8 +80,7 @@ void move_particles(int time0, int time1)
       //}
       
       
-      for(j = 0; j < 3; j++)
-	P[i].Pos[j] += P[i].Vel[j] * dt_drift;
+      for(j = 0; j < 3; j++) P[i].Pos[j] += P[i].Vel[j] * dt_drift;
 
 /*
       double rin=sqrt(pow(P[i].Pos[0],2)+pow(P[i].Pos[1],2)+pow(P[i].Pos[2],2));
@@ -125,6 +124,13 @@ void move_particles(int time0, int time1)
 
 	  SphP[i].Pressure = (SphP[i].Entropy + SphP[i].DtEntropy * dt_entr) * pow(SphP[i].Density, GAMMA);
 	}
+    }
+
+    // We use the force tree to search for neighborhood and do scattering
+    if(dt_drift>0.0 && !(TreeReconstructFlag)){
+        //if(dt_drift>0.0){ // results similar, but disturbance exists occasionally...
+        // In the beginning of scattering, will clear all nscatt
+        sidm(dt_drift, dt_gravkick);
     }
 
   /* if domain-decomp and tree are not going to be reconstructed, update dynamically.  */

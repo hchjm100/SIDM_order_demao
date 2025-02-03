@@ -19,7 +19,7 @@
 #define EN  64
 #endif
 
-int doscatt(int bullet, int mode,double dt_drift,double TypicalDist){
+int doscatt(int bullet, int mode,double dt_drift, double dt_gravkick, double TypicalDist){
 
 #ifdef PERIODIC
     double boxsize, boxhalf;
@@ -66,9 +66,15 @@ int doscatt(int bullet, int mode,double dt_drift,double TypicalDist){
 	pos_x = P[bullet].Pos[0];
 	pos_y = P[bullet].Pos[1];
 	pos_z = P[bullet].Pos[2];
-	vb_x = P[bullet].Vel[0];
-	vb_y = P[bullet].Vel[1];
-	vb_z = P[bullet].Vel[2];
+
+    // predicted particle velocity for bullet
+    double pred_vel_bu_x = P[bullet].Vel[0] + P[bullet].GravAccel[0] * dt_gravkick;
+    double pred_vel_bu_y = P[bullet].Vel[1] + P[bullet].GravAccel[1] * dt_gravkick;
+    double pred_vel_bu_z = P[bullet].Vel[2] + P[bullet].GravAccel[2] * dt_gravkick;
+
+	vb_x = pred_vel_bu_x;
+	vb_y = pred_vel_bu_y;
+	vb_z = pred_vel_bu_z;
 	mass = P[bullet].Mass;
     }
     else // mode==1, exported particles, working on the buffer
@@ -83,9 +89,15 @@ int doscatt(int bullet, int mode,double dt_drift,double TypicalDist){
 	pos_x = SIDMDataGet[bullet].Pos[0];
 	pos_y = SIDMDataGet[bullet].Pos[1];
 	pos_z = SIDMDataGet[bullet].Pos[2];
-	vb_x = SIDMDataGet[bullet].Vel[0];
-	vb_y = SIDMDataGet[bullet].Vel[1];
-	vb_z = SIDMDataGet[bullet].Vel[2];
+
+    // predicted exported particle velocity for bullet
+    double pred_vel_ex_bu_x = SIDMDataGet[bullet].Vel[0] + GravDataGet[bullet].u.Acc[0] * dt_gravkick;
+    double pred_vel_ex_bu_y = SIDMDataGet[bullet].Vel[1] + GravDataGet[bullet].u.Acc[1] * dt_gravkick;
+    double pred_vel_ex_bu_z = SIDMDataGet[bullet].Vel[2] + GravDataGet[bullet].u.Acc[2] * dt_gravkick;
+
+	vb_x = pred_vel_ex_bu_x;
+	vb_y = pred_vel_ex_bu_y;
+	vb_z = pred_vel_ex_bu_z;
 	mass = SIDMDataGet[bullet].Mass;
     }
 
@@ -129,9 +141,14 @@ int doscatt(int bullet, int mode,double dt_drift,double TypicalDist){
                
             //-------- Setup coordinate system --------
 
-            vr_x = vb_x - P[target].Vel[0];
-            vr_y = vb_y - P[target].Vel[1];
-            vr_z = vb_z - P[target].Vel[2];
+            // predicted particle velocity for target
+            double pred_vel_ta_x = P[target].Vel[0] + P[target].GravAccel[0] * dt_gravkick;
+            double pred_vel_ta_y = P[target].Vel[1] + P[target].GravAccel[1] * dt_gravkick;
+            double pred_vel_ta_z = P[target].Vel[2] + P[target].GravAccel[2] * dt_gravkick;
+
+            vr_x = vb_x - pred_vel_ta_x;
+            vr_y = vb_y - pred_vel_ta_y;
+            vr_z = vb_z - pred_vel_ta_z;
             vr2 = vr_x * vr_x + vr_y * vr_y + vr_z * vr_z;
             vr = sqrt(vr2);
 
@@ -214,12 +231,18 @@ int doscatt(int bullet, int mode,double dt_drift,double TypicalDist){
                 double m2=mass;
                 double Delta=0;
                 double clight = 299792.458;
-                double vbx = P[bullet].Vel[0];
-                double vby = P[bullet].Vel[1];
-                double vbz = P[bullet].Vel[2];
-                double vtx = P[target].Vel[0];
-                double vty = P[target].Vel[1];
-                double vtz = P[target].Vel[2];
+
+                // predicted particle velocity for bullet
+                double pred_vel_bu_x = P[bullet].Vel[0] + P[bullet].GravAccel[0] * dt_gravkick;
+                double pred_vel_bu_y = P[bullet].Vel[1] + P[bullet].GravAccel[1] * dt_gravkick;
+                double pred_vel_bu_z = P[bullet].Vel[2] + P[bullet].GravAccel[2] * dt_gravkick;
+
+                double vbx = pred_vel_bu_x;
+                double vby = pred_vel_bu_y;
+                double vbz = pred_vel_bu_z;
+                double vtx = pred_vel_ta_x;
+                double vty = pred_vel_ta_y;
+                double vtz = pred_vel_ta_z;
                 double vcmx = 0.5*(vbx+vtx);
                 double vcmy = 0.5*(vby+vty);
                 double vcmz = 0.5*(vbz+vtz);
@@ -297,13 +320,18 @@ int doscatt(int bullet, int mode,double dt_drift,double TypicalDist){
                 double Delta=0.;
                 double m2=m1-0.5*Delta;
                 double clight = 299792.458;
-          
-                double vbx = SIDMDataResult[bullet].Vel[0];
-                double vby = SIDMDataResult[bullet].Vel[1];
-                double vbz = SIDMDataResult[bullet].Vel[2];
-                double vtx = P[target].Vel[0];
-                double vty = P[target].Vel[1];
-                double vtz = P[target].Vel[2];
+
+                // predicted exported particle velocity for bullet
+                double pred_vel_dr_bu_x = SIDMDataResult[bullet].Vel[0] + GravDataResult[bullet].u.Acc[0] * dt_gravkick;
+                double pred_vel_dr_bu_y = SIDMDataResult[bullet].Vel[1] + GravDataResult[bullet].u.Acc[1] * dt_gravkick;
+                double pred_vel_dr_bu_z = SIDMDataResult[bullet].Vel[2] + GravDataResult[bullet].u.Acc[2] * dt_gravkick;
+
+                double vbx = pred_vel_dr_bu_x;
+                double vby = pred_vel_dr_bu_y;
+                double vbz = pred_vel_dr_bu_z;
+                double vtx = pred_vel_ta_x;
+                double vty = pred_vel_ta_y;
+                double vtz = pred_vel_ta_z;
                 double vcmx = 0.5*(vbx+vtx);
                 double vcmy = 0.5*(vby+vty);
                 double vcmz = 0.5*(vbz+vtz);
